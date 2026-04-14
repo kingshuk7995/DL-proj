@@ -1,0 +1,36 @@
+seed: 42
+device: auto
+output_dir: runs/nopos_exp
+
+dataset:
+  name: wikitext
+  config: wikitext-103-raw-v1
+  tokenizer: gpt2
+  seq_len: 512
+  stride: 256
+  max_tokens: null
+
+model:
+  vocab_size: null
+  d_model: 512
+  n_heads: 8
+  n_layers: 8
+  d_ff: 2048
+  dropout: 0.1
+  pos_encoding: none
+  tie_weights: true
+
+train:
+  batch_size: 16
+  num_workers: 2
+  pin_memory: true
+  epochs: 10
+  lr: 0.0003
+  weight_decay: 0.01
+  grad_clip: 1.0
+  amp: true
+  optimizer: adamw
+  scheduler: cosine
+  warmup_steps: 500
+  log_every: 50
+  save_best_only: true
