@@ -37,6 +37,7 @@ class TrainConfig:
     lr: float = 3e-4
     weight_decay: float = 0.01
     grad_clip: float = 1.0
+    grad_accum: int = 1
     amp: bool = True
     optimizer: Literal["adamw", "adam"] = "adamw"
     scheduler: Literal["cosine", "linear_warmup", "none"] = "cosine"

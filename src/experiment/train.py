@@ -10,7 +10,20 @@ from tqdm import tqdm
 from .config import Config
 from .data import build_dataloaders
 from .model import CausalTransformerLM
-from .utils import ensure_dir, seed_everything, get_device, save_json, perplexity
+from .utils import (
+    ensure_dir,
+    seed_everything,
+    get_device,
+    save_json,
+    perplexity,
+    setup_logging,
+    dataclass_to_dict,
+)
+
+try:
+    from torch.amp import GradScaler, autocast
+except ImportError:
+    from torch.cuda.amp import GradScaler, autocast
 
 
 def _batch_to_device(batch, device):
@@ -70,6 +83,10 @@ def train(cfg: Config) -> Dict:
     device = get_device(cfg.device)
     outdir = ensure_dir(cfg.output_dir)
     ckpt_dir = ensure_dir(outdir / "checkpoints")
+    logger = setup_logging(outdir)
+
+    logger.info(f"Starting training on {device}")
+    logger.info(f"Config: {cfg}")
 
     tokenizer, train_dl, val_dl, test_dl = build_dataloaders(cfg)
     cfg.model.vocab_size = tokenizer.vocab_size
@@ -87,50 +104,46 @@ def train(cfg: Config) -> Dict:
 
     criterion = nn.CrossEntropyLoss()
     optimizer = build_optimizer(cfg, model)
-    scheduler = build_scheduler(cfg, optimizer, steps_per_epoch=len(train_dl))
-    scaler = torch.amp.GradScaler("cuda", enabled=(cfg.train.amp and device.type == "cuda"))
+    scheduler = build_scheduler(cfg, optimizer, steps_per_epoch=len(train_dl) // cfg.train.grad_accum)
+    scaler = GradScaler(enabled=(cfg.train.amp and device.type == "cuda"))
 
     best_val = float("inf")
     history = []
     global_step = 0
 
-    save_json(outdir / "config.json", {
-        "seed": cfg.seed,
-        "device": cfg.device,
-        "output_dir": cfg.output_dir,
-        "dataset": cfg.dataset.__dict__,
-        "model": cfg.model.__dict__,
-        "train": cfg.train.__dict__,
-    })
+    save_json(outdir / "config.json", dataclass_to_dict(cfg))
 
     for epoch in range(1, cfg.train.epochs + 1):
         model.train()
         running_loss = 0.0
         running_tokens = 0
 
+        optimizer.zero_grad(set_to_none=True)
         pbar = tqdm(train_dl, desc=f"Epoch {epoch}/{cfg.train.epochs}", leave=False)
-        for batch in pbar:
+        for i, batch in enumerate(pbar):
             x, y = _batch_to_device(batch, device)
 
-            optimizer.zero_grad(set_to_none=True)
-            with torch.autocast(device_type=device.type, enabled=(cfg.train.amp and device.type == "cuda")):
+            with autocast(device_type=device.type, enabled=(cfg.train.amp and device.type == "cuda")):
                 logits = model(x)
                 loss = _loss(logits, y, criterion)
+                loss = loss / cfg.train.grad_accum
 
             scaler.scale(loss).backward()
-            if cfg.train.grad_clip is not None and cfg.train.grad_clip > 0:
-                scaler.unscale_(optimizer)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.train.grad_clip)
-            scaler.step(optimizer)
-            scaler.update()
-
-            if scheduler is not None:
-                scheduler.step()
+            
+            if (i + 1) % cfg.train.grad_accum == 0:
+                if cfg.train.grad_clip is not None and cfg.train.grad_clip > 0:
+                    scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.train.grad_clip)
+                scaler.step(optimizer)
+                scaler.update()
+                optimizer.zero_grad(set_to_none=True)
+                if scheduler is not None:
+                    scheduler.step()
+                global_step += 1
 
             n = y.numel()
-            running_loss += loss.item() * n
+            running_loss += (loss.item() * cfg.train.grad_accum) * n
             running_tokens += n
-            global_step += 1
 
             if global_step % cfg.train.log_every == 0:
                 avg = running_loss / max(running_tokens, 1)
@@ -148,7 +161,10 @@ def train(cfg: Config) -> Dict:
             "val_ppl": val_metrics["ppl"],
         }
         history.append(row)
-        print(row)
+        logger.info(
+            f"Epoch {epoch}: train_loss={row['train_loss']:.4f}, train_ppl={row['train_ppl']:.2f}, "
+            f"val_loss={row['val_loss']:.4f}, val_ppl={row['val_ppl']:.2f}"
+        )
 
         last_path = ckpt_dir / "last.pt"
         torch.save(
@@ -158,11 +174,7 @@ def train(cfg: Config) -> Dict:
                 "scaler_state": scaler.state_dict(),
                 "epoch": epoch,
                 "global_step": global_step,
-                "cfg": {
-                    "dataset": cfg.dataset.__dict__,
-                    "model": cfg.model.__dict__,
-                    "train": cfg.train.__dict__,
-                },
+                "cfg": dataclass_to_dict(cfg),
             },
             last_path,
         )
@@ -171,6 +183,7 @@ def train(cfg: Config) -> Dict:
             best_val = val_metrics["loss"]
             best_path = ckpt_dir / "best.pt"
             torch.save(torch.load(last_path, map_location="cpu"), best_path)
+            logger.info(f"New best val loss: {best_val:.4f}, saving to {best_path}")
 
     test_metrics = evaluate(model, test_dl, criterion, device)
 

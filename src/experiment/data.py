@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional
-
+import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from datasets import load_dataset
@@ -51,24 +51,58 @@ def load_tokenizer(name: str) -> GPT2TokenizerFast:
 
 
 def _encode_text(tokenizer: GPT2TokenizerFast, raw_split) -> torch.Tensor:
-    texts = [t.strip() for t in raw_split["text"] if t and t.strip()]
-    if not texts:
-        raise ValueError("No usable text found in the dataset split")
-    
-    all_ids = []
+    # Silence sequence length warnings
+    tokenizer.model_max_length = int(1e30)
 
-    chunk_size = 1000
-    for i in range(0, len(texts), chunk_size):
-        chunk = texts[i : i + chunk_size]
-        encoded = tokenizer(chunk, add_special_tokens=False, return_attention_mask=False, return_token_type_ids=False)
-        for ids in encoded["input_ids"]:
-            all_ids.extend(ids)
-            all_ids.append(tokenizer.eos_token_id)
-            
-    if all_ids:
-        all_ids.pop()
+    def tokenize_fn(examples):
+        # Efficiently tokenize a batch
+        # Filter out empty strings to avoid unnecessary processing
+        texts = [t for t in examples["text"] if t and t.strip()]
+        if not texts:
+             return {"input_ids_batched": []}
+             
+        encoded = tokenizer(
+            texts,
+            add_special_tokens=False,
+            return_attention_mask=False,
+            return_token_type_ids=False,
+        )
         
-    return torch.tensor(all_ids, dtype=torch.long)
+        # Flatten the batch and add EOS after each document
+        ids_batched = []
+        for ids in encoded["input_ids"]:
+            if len(ids) > 0:
+                ids_batched.extend(ids)
+                ids_batched.append(tokenizer.eos_token_id)
+        
+        # Return as a single list for this batch to reduce dataset overhead
+        return {"input_ids_batched": [ids_batched]}
+
+    # Use map to process and flatten with keep_in_memory=True to avoid disk space issues
+    tokenized = raw_split.map(
+        tokenize_fn,
+        batched=True,
+        batch_size=1000,
+        remove_columns=raw_split.column_names,
+        keep_in_memory=True,
+        desc="Tokenizing and flattening",
+    )
+    
+    # Calculate total length to pre-allocate numpy array
+    # We iterate to avoid loading the whole column into a Python list
+    total_len = 0
+    for i in range(len(tokenized)):
+        total_len += len(tokenized[i]["input_ids_batched"])
+        
+    arr = np.zeros(total_len, dtype=np.int64)
+    offset = 0
+    for i in range(len(tokenized)):
+        ids = tokenized[i]["input_ids_batched"]
+        l = len(ids)
+        arr[offset : offset + l] = ids
+        offset += l
+            
+    return torch.from_numpy(arr)
 
 
 def build_datasets(cfg: Config):

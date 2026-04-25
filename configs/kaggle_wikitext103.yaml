@@ -1,6 +1,6 @@
 seed: 42
 device: auto
-output_dir: runs/wikitext103_nopos
+output_dir: /kaggle/working/runs/wikitext103_nopos
 
 dataset:
   name: wikitext
@@ -21,16 +21,17 @@ model:
   tie_weights: true
 
 train:
-  batch_size: 16
-  num_workers: 2
-  pin_memory: false
+  batch_size: 8  # Reduced for stability, used with grad_accum
+  grad_accum: 4  # Effective batch size = 32
+  num_workers: 4
+  pin_memory: true
   epochs: 200
-  lr: 0.0003
+  lr: 0.00025
   weight_decay: 0.01
   grad_clip: 1.0
   amp: true
   optimizer: adamw
   scheduler: cosine
-  warmup_steps: 500
+  warmup_steps: 1000
   log_every: 50
   save_best_only: true

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import logging
 import math
 import random
+import sys
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any
@@ -38,8 +40,38 @@ def save_json(path: str | Path, obj: Any) -> None:
 
 def dataclass_to_dict(obj: Any) -> Any:
     if is_dataclass(obj):
-        return asdict(obj)
+        return {k: dataclass_to_dict(v) for k, v in asdict(obj).items()}
+    if isinstance(obj, dict):
+        return {k: dataclass_to_dict(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [dataclass_to_dict(v) for v in obj]
     return obj
+
+
+def setup_logging(output_dir: str | Path) -> logging.Logger:
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    logger = logging.getLogger("experiment")
+    # Reset handlers if they exist (important for multiple runs in notebooks)
+    for handler in logger.handlers[:]:
+        logger.removeHandler(handler)
+        
+    logger.setLevel(logging.INFO)
+
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+
+    # Console handler
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    # File handler
+    fh = logging.FileHandler(output_dir / "train.log")
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+
+    return logger
 
 
 def perplexity(loss: float) -> float:

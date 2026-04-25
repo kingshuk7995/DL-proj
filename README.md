@@ -18,6 +18,7 @@ uv run scripts/train.py --config configs/wikitext103.yaml
 uv run scripts/evaluate.py --config configs/wikitext103.yaml --checkpoint runs/exp/checkpoints/best.pt --split test
 uv run scripts/generate.py --config configs/wikitext103.yaml --checkpoint runs/exp/checkpoints/best.pt --prompt "The theory of"
 ```
+- For running on Kaggle, see [KAGGLE_GUIDE.md](KAGGLE_GUIDE.md).
 
 ## Notes
 
