@@ -29,3 +29,5 @@ uv run scripts/generate.py --config configs/wikitext103.yaml --checkpoint runs/e
   - optimizer
   - model size
 - For a paper-style run, increase model width/depth and batch size as your hardware allows.
+
+For checkpoints, download from here [drive link](https://drive.google.com/drive/folders/1Mp3hQ5uDDmmrYxwZuk2HJacZp-2Rbbmx?usp=sharing) and paste to ./runs/wikitext103_nopos/checkpoints
