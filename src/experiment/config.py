@@ -51,6 +51,7 @@ class Config:
     seed: int = 42
     device: str = "auto"
     output_dir: str = "runs/nopos_exp"
+    resume: Optional[str] = None  # path to checkpoint .pt to resume from
     dataset: DatasetConfig = field(default_factory=DatasetConfig)
     model: ModelConfig = field(default_factory=ModelConfig)
     train: TrainConfig = field(default_factory=TrainConfig)

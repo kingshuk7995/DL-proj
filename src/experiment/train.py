@@ -110,10 +110,31 @@ def train(cfg: Config) -> Dict:
     best_val = float("inf")
     history = []
     global_step = 0
+    start_epoch = 0
+
+    # ── Resume from checkpoint ────────────────────────────────────────────────
+    if cfg.resume:
+        resume_path = Path(cfg.resume)
+        if resume_path.is_file():
+            logger.info(f"Resuming from checkpoint: {resume_path}")
+            ckpt = torch.load(resume_path, map_location=device)
+            model.load_state_dict(ckpt["model_state"])
+            optimizer.load_state_dict(ckpt["optimizer_state"])
+            scaler.load_state_dict(ckpt["scaler_state"])
+            start_epoch = ckpt.get("epoch", 0)       # last *completed* epoch
+            global_step = ckpt.get("global_step", 0)
+            best_val = ckpt.get("best_val", float("inf"))  # carry over best val
+            logger.info(
+                f"Resumed at epoch {start_epoch}, global_step {global_step}, "
+                f"best_val {best_val:.4f}"
+            )
+        else:
+            logger.warning(f"Resume path not found: {resume_path}. Starting from scratch.")
+    # ─────────────────────────────────────────────────────────────────────────
 
     save_json(outdir / "config.json", dataclass_to_dict(cfg))
 
-    for epoch in range(1, cfg.train.epochs + 1):
+    for epoch in range(start_epoch + 1, cfg.train.epochs + 1):
         model.train()
         running_loss = 0.0
         running_tokens = 0
@@ -182,7 +203,9 @@ def train(cfg: Config) -> Dict:
         if val_metrics["loss"] < best_val:
             best_val = val_metrics["loss"]
             best_path = ckpt_dir / "best.pt"
-            torch.save(torch.load(last_path, map_location="cpu"), best_path)
+            best_ckpt = torch.load(last_path, map_location="cpu")
+            best_ckpt["best_val"] = best_val
+            torch.save(best_ckpt, best_path)
             logger.info(f"New best val loss: {best_val:.4f}, saving to {best_path}")
 
     test_metrics = evaluate(model, test_dl, criterion, device)

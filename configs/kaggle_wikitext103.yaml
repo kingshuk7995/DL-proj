@@ -1,6 +1,7 @@
 seed: 42
 device: auto
 output_dir: /kaggle/working/runs/wikitext103_nopos
+resume: /kaggle/working/runs/wikitext103_nopos/checkpoints/best.pt
 
 dataset:
   name: wikitext
@@ -21,11 +22,11 @@ model:
   tie_weights: true
 
 train:
-  batch_size: 8  # Reduced for stability, used with grad_accum
-  grad_accum: 4  # Effective batch size = 32
+  batch_size: 8
+  grad_accum: 2  # Reduced from 4; effective batch = 16, faster steps, fits 10hr budget
   num_workers: 4
   pin_memory: true
-  epochs: 200
+  epochs: 10
   lr: 0.00025
   weight_decay: 0.01
   grad_clip: 1.0
