@@ -59,13 +59,23 @@ class CausalTransformerLM(nn.Module):
             if isinstance(module, nn.Linear) and module.bias is not None:
                 nn.init.zeros_(module.bias)
 
-    def forward(self, input_ids: torch.Tensor) -> torch.Tensor:
+    def forward(self, input_ids: torch.Tensor, return_hidden_states: bool = False):
+        hidden_states = [] if return_hidden_states else None
         x = self.tok_emb(input_ids)
         if self.pos_emb is not None:
             x = self.pos_emb(x)
         else:
             x = self.drop(x)
+        if return_hidden_states:
+            hidden_states.append(x)
         for block in self.blocks:
             x = block(x)
+            if return_hidden_states:
+                hidden_states.append(x)
         x = self.ln_f(x)
-        return self.lm_head(x)
+        if return_hidden_states:
+            hidden_states.append(x)
+        logits = self.lm_head(x)
+        if return_hidden_states:
+            return logits, hidden_states
+        return logits
