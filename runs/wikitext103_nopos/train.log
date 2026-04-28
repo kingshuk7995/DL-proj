@@ -6,3 +6,9 @@
 2026-04-26 00:02:57 - INFO - New best val loss: 3.3108, saving to /kaggle/working/runs/wikitext103_nopos/checkpoints/best.pt
 2026-04-26 03:18:02 - INFO - Epoch 3: train_loss=3.3682, train_ppl=29.03, val_loss=3.2391, val_ppl=25.51
 2026-04-26 03:18:05 - INFO - New best val loss: 3.2391, saving to /kaggle/working/runs/wikitext103_nopos/checkpoints/best.pt
+2026-04-26 11:23:52 - INFO - Epoch 4: train_loss=3.3367, train_ppl=28.13, val_loss=3.2246, val_ppl=25.14
+2026-04-26 11:23:54 - INFO - New best val loss: 3.2246, saving to /kaggle/working/runs/wikitext103_nopos/checkpoints/best.pt
+2026-04-26 14:43:04 - INFO - Epoch 5: train_loss=3.2781, train_ppl=26.53, val_loss=3.1836, val_ppl=24.13
+2026-04-26 14:43:06 - INFO - New best val loss: 3.1836, saving to /kaggle/working/runs/wikitext103_nopos/checkpoints/best.pt
+2026-04-26 18:02:05 - INFO - Epoch 6: train_loss=3.2308, train_ppl=25.30, val_loss=3.1475, val_ppl=23.28
+2026-04-26 18:02:08 - INFO - New best val loss: 3.1475, saving to /kaggle/working/runs/wikitext103_nopos/checkpoints/best.pt

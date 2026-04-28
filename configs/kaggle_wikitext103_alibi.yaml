@@ -1,6 +1,6 @@
 seed: 42
 device: auto
-output_dir: /kaggle/working/runs/wikitext103_nopos
+output_dir: /kaggle/working/runs/wikitext103_alibi
 # resume: /kaggle/working/runs/wikitext103_nopos/checkpoints/best.pt
 
 dataset:
@@ -18,7 +18,7 @@ model:
   n_layers: 8
   d_ff: 2048
   dropout: 0.1
-  pos_encoding: none
+  pos_encoding: alibi
   tie_weights: true
 
 train:
