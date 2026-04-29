@@ -183,8 +183,7 @@ train(cfg)
     └── Append to history: {epoch, train_loss, train_ppl, val_loss, val_ppl}
     ↓
 [POST-TRAINING]
-    └── Model converges after 200 epochs (from config)
-        Result: ./runs/wikitext103_nopos/
+    └── Result: ./runs/wikitext103_nopos/
         ├── config.json
         └── checkpoints/
             ├── best.pt     (best validation checkpoint)
@@ -249,12 +248,7 @@ evaluate_checkpoint(cfg, checkpoint_path, split)
     │   ├── loss: 6.2314
     │   ├── ppl: 505.23
     │   └── layerwise: [32.1, 28.3, 24.5, ..., 18.2]
-    └── For NoPos: If MAE stays high → model NOT learning position
-        For Sinusoidal/Learned/ALiBi: If MAE decreases → model using position
 ```
-
-**Analysis Purpose**: Measures whether position information is being implicitly learned by comparing linear regression performance at each layer.
-
 ---
 
 #### **Flow 3: GENERATION** ([scripts/generate.py](scripts/generate.py) → [src/experiment/generation.py](src/experiment/generation.py))
