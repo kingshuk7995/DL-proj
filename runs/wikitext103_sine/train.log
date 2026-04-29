@@ -1,0 +1,8 @@
+2026-04-28 17:48:36 - INFO - Starting training on cuda
+2026-04-28 17:48:36 - INFO - Config: Config(seed=42, device='auto', output_dir='/kaggle/working/runs/wikitext103_sine', resume=None, dataset=DatasetConfig(name='wikitext', config='wikitext-103-raw-v1', tokenizer='gpt2', seq_len=512, stride=256, max_tokens=None), model=ModelConfig(vocab_size=None, d_model=512, n_heads=8, n_layers=8, d_ff=2048, dropout=0.1, pos_encoding='sinusoidal', tie_weights=True), train=TrainConfig(batch_size=8, num_workers=4, pin_memory=True, epochs=3, lr=0.00025, weight_decay=0.01, grad_clip=1.0, grad_accum=4, amp=True, optimizer='adamw', scheduler='cosine', warmup_steps=1000, log_every=50, save_best_only=True))
+2026-04-28 21:12:38 - INFO - Epoch 1: train_loss=4.8519, train_ppl=127.98, val_loss=3.8075, val_ppl=45.04
+2026-04-28 21:12:40 - INFO - New best val loss: 3.8075, saving to /kaggle/working/runs/wikitext103_sine/checkpoints/best.pt
+2026-04-29 00:32:11 - INFO - Epoch 2: train_loss=3.7712, train_ppl=43.43, val_loss=3.5196, val_ppl=33.77
+2026-04-29 00:32:14 - INFO - New best val loss: 3.5196, saving to /kaggle/working/runs/wikitext103_sine/checkpoints/best.pt
+2026-04-29 03:51:44 - INFO - Epoch 3: train_loss=3.5918, train_ppl=36.30, val_loss=3.4661, val_ppl=32.01
+2026-04-29 03:51:47 - INFO - New best val loss: 3.4661, saving to /kaggle/working/runs/wikitext103_sine/checkpoints/best.pt

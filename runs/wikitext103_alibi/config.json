@@ -1,0 +1,40 @@
+{
+  "seed": 42,
+  "device": "auto",
+  "output_dir": "/kaggle/working/runs/wikitext103_alibi",
+  "resume": null,
+  "dataset": {
+    "name": "wikitext",
+    "config": "wikitext-103-raw-v1",
+    "tokenizer": "gpt2",
+    "seq_len": 512,
+    "stride": 256,
+    "max_tokens": null
+  },
+  "model": {
+    "vocab_size": 50257,
+    "d_model": 512,
+    "n_heads": 8,
+    "n_layers": 8,
+    "d_ff": 2048,
+    "dropout": 0.1,
+    "pos_encoding": "alibi",
+    "tie_weights": true
+  },
+  "train": {
+    "batch_size": 8,
+    "num_workers": 4,
+    "pin_memory": true,
+    "epochs": 3,
+    "lr": 0.00025,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "grad_accum": 4,
+    "amp": true,
+    "optimizer": "adamw",
+    "scheduler": "cosine",
+    "warmup_steps": 1000,
+    "log_every": 50,
+    "save_best_only": true
+  }
+}
