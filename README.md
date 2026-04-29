@@ -306,4 +306,5 @@ generate(model, tokenizer, prompt, ...)
 ### Experimental results
 Results can be found on [results_analysis.ipynb](result_analysis.ipynb).
 ![perplexity_comparison](image.png)
-![mad_vs_layer](image-1.png)
+![loss_epochs](image-2.png)
+![mad_layer](image-1.png)
