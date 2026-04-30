@@ -6,14 +6,15 @@ import sys
 
 import torch
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
-
 from experiment.config import load_config
 from experiment.data import build_dataloaders
 from experiment.model import CausalTransformerLM
 from experiment.generation import generate
 from experiment.utils import get_device
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 
 
 def main():
