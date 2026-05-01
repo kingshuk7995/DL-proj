@@ -56,6 +56,7 @@ For evaluation and generation, we can run these:
 python scripts/evaluate.py --config configs/wikitext103.yaml --checkpoint runs/[exp]/checkpoints/best.pt --split test
 python scripts/generate.py --config configs/wikitext103.yaml --checkpoint runs/[exp]/checkpoints/best.pt --prompt "The theory of"
 ```
+These are explained in [this video](https://youtu.be/pSz16YWzK4w?si=1kk_UXaneMpwqWtb). Slides to the presentation are found inside slides/
 
 ### Description of datasets
 WikiText-103 (raw-v1) - a 314M token corpus from Wikipedia articles
